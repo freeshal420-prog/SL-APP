@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="SL" />
+  <meta name="theme-color" content="#05021a" />
+  <title>SL</title>
+  <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'><defs><linearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'><stop offset='0%25' stop-color='%23d946ef'/><stop offset='50%25' stop-color='%23a855f7'/><stop offset='100%25' stop-color='%2322d3ee'/></linearGradient></defs><rect width='120' height='120' rx='28' fill='%23050218'/><circle cx='60' cy='60' r='14' fill='url(%23g)'/><circle cx='60' cy='60' r='4' fill='white'/></svg>" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; height: 100%; background: #000; overscroll-behavior: none; -webkit-tap-highlight-color: transparent; }
+    #root { margin: 0; padding: 0; height: 100dvh; background: #000; display: flex; align-items: center; justify-content: center; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; }
+    input, button, textarea { font-family: inherit; }
+    ::-webkit-scrollbar { display: none; }
+    * { -webkit-touch-callout: none; -ms-overflow-style: none; scrollbar-width: none; box-sizing: border-box; }
+    input, textarea { -webkit-touch-callout: default; }
+    .sl-scrollable { overflow-y: scroll !important; -webkit-overflow-scrolling: touch !important; overscroll-behavior: contain; }
+    .ca-flag { font-family: "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif; font-size: 20px; line-height: 1; display: inline-block; }
+    .phone-row { display: flex; gap: 10px; width: 100%; }
+    .phone-flag-btn { flex-shrink: 0; display: flex; align-items: center; gap: 6px; padding: 12px 14px; border-radius: 12px; font-weight: 700; color: white; white-space: nowrap; }
+    .phone-input { flex: 1 1 0%; min-width: 0; padding: 12px 16px; border-radius: 12px; outline: none; font-weight: 500; color: white; display: block; }
+    .pin-dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid rgba(168,85,247,0.6); transition: all 0.15s; }
+    .pin-dot.filled { background: linear-gradient(135deg,#d946ef,#a855f7); border-color: #d946ef; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    /* ============ Lucide-style SVG Icons ============ */
+    const Lc = ({ size=24, color="currentColor", strokeWidth=2, fill="none", className="", style={}, children, ...rest }) => (
+      <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className} style={style} {...rest}>{children}</svg>
+    );
+    const ShoppingCart = (p) => <Lc {...p}><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></Lc>;
+    const Home = (p) => <Lc {...p}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></Lc>;
+    const Receipt = (p) => <Lc {...p}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/></Lc>;
+    const User = (p) => <Lc {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></Lc>;
+    const ChevronRight = (p) => <Lc {...p}><path d="m9 18 6-6-6-6"/></Lc>;
+    const XIcon = (p) => <Lc {...p}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></Lc>;
+    const Plus = (p) => <Lc {...p}><path d="M5 12h14"/><path d="M12 5v14"/></Lc>;
+    const Minus = (p) => <Lc {...p}><path d="M5 12h14"/></Lc>;
+    const ArrowLeft = (p) => <Lc {...p}><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></Lc>;
+    const Settings = (p) => <Lc {...p}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></Lc>;
+    const Clock = (p) => <Lc {...p}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></Lc>;
+    const RefreshCw = (p) => <Lc {...p}><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></Lc>;
+    const Check = (p) => <Lc {...p}><polyline points="20 6 9 17 4 12"/></Lc>;
+    const Phone = (p) => <Lc {...p}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></Lc>;
+    const FileText = (p) => <Lc {...p}><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></Lc>;
+    const LogOut = (p) => <Lc {...p}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></Lc>;
+    const Eye = (p) => <Lc {...p}><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></Lc>;
+    const EyeOff = (p) => <Lc {...p}><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></Lc>;
+    const Copy = (p) => <Lc {...p}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></Lc>;
+    const Edit2 = (p) => <Lc {...p}><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></Lc>;
+    const Sparkles = (p) => <Lc {...p}><path d="M9.94 15.5A2 2 0 0 0 8.5 14.06L2.36 12.48a.5.5 0 0 1 0-.96L8.5 9.94A2 2 0 0 0 9.94 8.5l1.58-6.14a.5.5 0 0 1 .96 0L14.06 8.5A2 2 0 0 0 15.5 9.94l6.14 1.58a.5.5 0 0 1 0 .96l-6.14 1.58a2 2 0 0 0-1.44 1.44l-1.58 6.14a.5.5 0 0 1-.96 0z"/></Lc>;
+
+    /* ============ Cosmic tokens ============ */
+    const C = {
+      void: "#05021a", deep: "#0d0628", mid: "#1a0a3e", nebula: "#3d1a6b",
+      magenta: "#d946ef", violet: "#a855f7", blue: "#6366f1", cyan: "#22d3ee",
+      glassBg: "rgba(15, 8, 40, 0.55)", glassBorder: "rgba(168, 85, 247, 0.25)", glassHi: "rgba(217, 70, 239, 0.4)",
+    };
+    const TERMS_URL = "https://www.freeprivacypolicy.com/live/0b297db9-92ac-4a77-8131-138acdc23506";
+    const COSMIC_GRADIENT = `linear-gradient(135deg, ${C.magenta} 0%, ${C.violet} 35%, ${C.blue} 70%, ${C.cyan} 100%)`;
+
+    /* ============ Menu ============ */
+    const MENU = [
+      { id: "shake", name: "Cosmic Protein Shake", subtitle: "25g Protein \u00B7 Premium", priceRange: "$8.99 - $12.99", description: "Grass-fed whey isolate blended cold. Zero added sugar. Made fresh.", emoji: "\uD83E\uDD64",
+        sizes: [{ id: "s", name: "Single (16 oz)", price: 8.99, info: "25g protein" }, { id: "l", name: "Large (24 oz)", price: 10.99, info: "40g protein" }, { id: "xl", name: "XL (32 oz)", price: 12.99, info: "50g protein" }],
+        flavors: ["Chocolate", "Vanilla", "Strawberry", "Cookies & Cream"] },
+      { id: "bowl", name: "Stardust Acai Bowl", subtitle: "Acai \u00B7 Granola \u00B7 Fresh fruit", priceRange: "$11.99 - $15.99", description: "Organic acai blend topped with house granola, banana, and seasonal fruit.", emoji: "\uD83C\uDF47",
+        sizes: [{ id: "r", name: "Regular", price: 11.99, info: "12 oz" }, { id: "l", name: "Large", price: 15.99, info: "20 oz" }],
+        flavors: ["Classic Berry", "Tropical Mango", "Peanut Butter Power"] },
+      { id: "wrap", name: "Galaxy Power Wrap", subtitle: "Grilled chicken \u00B7 Greens", priceRange: "$10.99 - $13.99", description: "Grilled chicken, mixed greens, avocado, and house dressing in a spinach wrap.", emoji: "\uD83C\uDF2F",
+        sizes: [{ id: "s", name: "Single Wrap", price: 10.99, info: "Lunch size" }, { id: "c", name: "Combo + drink", price: 13.99, info: "Best value" }],
+        flavors: ["Grilled Chicken", "Falafel", "Steak"] },
+      { id: "coldbrew", name: "Nebula Cold Brew", subtitle: "Slow-steeped \u00B7 16h", priceRange: "$4.99 - $7.99", description: "Single-origin beans steeped 16 hours. Smooth, low-acid, naturally sweet.", emoji: "\u2615",
+        sizes: [{ id: "s", name: "Small (12 oz)", price: 4.99, info: "Black" }, { id: "l", name: "Large (20 oz)", price: 6.49, info: "Black" }, { id: "xl", name: "Bottle (1L)", price: 7.99, info: "Take-home" }],
+        flavors: ["Black", "Vanilla Sweet Cream", "Mocha", "Oat Milk"] },
+      { id: "energy", name: "Supernova Energy", subtitle: "Natural caffeine \u00B7 Zero sugar", priceRange: "$3.99 - $19.99", description: "Clean energy from green tea & guarana. Real fruit. No artificial anything.", emoji: "\u26A1",
+        sizes: [{ id: "1", name: "Single Can", price: 3.99, info: "120mg caffeine" }, { id: "4", name: "4-Pack", price: 14.99, info: "Save $1" }, { id: "6", name: "6-Pack", price: 19.99, info: "Best value" }],
+        flavors: ["Citrus Burst", "Berry Blast", "Tropical Punch"] },
+    ];
+    const MOCK_ORDERS = [
+      { id: "SL-2841", date: "Apr 25, 2026", status: "Delivered", total: 22.97, items: [{ name: "Cosmic Protein Shake (Large)", flavor: "Chocolate" }, { name: "Stardust Acai Bowl (Regular)", flavor: "Classic Berry" }] },
+      { id: "SL-2733", date: "Apr 18, 2026", status: "Delivered", total: 14.98, items: [{ name: "Galaxy Power Wrap (Combo)", flavor: "Grilled Chicken" }] },
+    ];
+
+    /* ============ Galaxy canvas ============ */
+    function GalaxyBackground() {
+      const ref = useRef(null);
+      useEffect(() => {
+        const canvas = ref.current; if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        let raf, w, h, dpr;
+        const stars = [], nebulae = [], shooters = [];
+        const resize = () => {
+          dpr = Math.min(window.devicePixelRatio || 1, 2);
+          w = canvas.clientWidth; h = canvas.clientHeight;
+          canvas.width = w * dpr; canvas.height = h * dpr;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        };
+        resize();
+        const ro = new ResizeObserver(resize); ro.observe(canvas);
+        for (let i = 0; i < 140; i++) {
+          stars.push({ x: Math.random() * w, y: Math.random() * h, r: Math.random() * 1.4 + 0.2,
+            baseA: Math.random() * 0.7 + 0.3, twinkle: Math.random() * Math.PI * 2,
+            twinkleSpeed: Math.random() * 0.02 + 0.005, depth: Math.random(),
+            hue: Math.random() < 0.85 ? "#ffffff" : (Math.random() < 0.5 ? "#a5b4fc" : "#f0abfc") });
+        }
+        nebulae.push({ x: w * 0.25, y: h * 0.3, r: Math.max(w, h) * 0.55, color1: "rgba(168,85,247,0.18)", color2: "rgba(168,85,247,0)", vx: 0.04, vy: 0.02 });
+        nebulae.push({ x: w * 0.75, y: h * 0.65, r: Math.max(w, h) * 0.5, color1: "rgba(217,70,239,0.16)", color2: "rgba(217,70,239,0)", vx: -0.03, vy: -0.015 });
+        nebulae.push({ x: w * 0.5, y: h * 0.9, r: Math.max(w, h) * 0.4, color1: "rgba(34,211,238,0.10)", color2: "rgba(34,211,238,0)", vx: 0.02, vy: -0.03 });
+        const draw = () => {
+          const bg = ctx.createLinearGradient(0, 0, 0, h);
+          bg.addColorStop(0, "#05021a"); bg.addColorStop(0.5, "#0d0628"); bg.addColorStop(1, "#170a3a");
+          ctx.fillStyle = bg; ctx.fillRect(0, 0, w, h);
+          for (const n of nebulae) {
+            n.x += n.vx; n.y += n.vy;
+            if (n.x < -n.r) n.x = w + n.r; if (n.x > w + n.r) n.x = -n.r;
+            if (n.y < -n.r) n.y = h + n.r; if (n.y > h + n.r) n.y = -n.r;
+            const g = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, n.r);
+            g.addColorStop(0, n.color1); g.addColorStop(1, n.color2);
+            ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+          }
+          for (const s of stars) {
+            s.twinkle += s.twinkleSpeed;
+            const a = s.baseA * (0.6 + Math.sin(s.twinkle) * 0.4);
+            ctx.globalAlpha = a; ctx.fillStyle = s.hue;
+            ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+            if (s.r > 1) {
+              ctx.globalAlpha = a * 0.3;
+              ctx.beginPath(); ctx.arc(s.x, s.y, s.r * 3, 0, Math.PI * 2); ctx.fill();
+            }
+          }
+          ctx.globalAlpha = 1;
+          if (Math.random() < 0.003 && shooters.length < 2) {
+            shooters.push({ x: Math.random() * w * 0.6, y: Math.random() * h * 0.4, vx: 6 + Math.random() * 4, vy: 2 + Math.random() * 2, life: 0, max: 60 });
+          }
+          for (let i = shooters.length - 1; i >= 0; i--) {
+            const sh = shooters[i]; sh.life++;
+            const tx = sh.x + sh.vx * sh.life; const ty = sh.y + sh.vy * sh.life;
+            const grad = ctx.createLinearGradient(tx - sh.vx * 12, ty - sh.vy * 12, tx, ty);
+            grad.addColorStop(0, "rgba(255,255,255,0)"); grad.addColorStop(1, "rgba(255,255,255,0.9)");
+            ctx.strokeStyle = grad; ctx.lineWidth = 1.4;
+            ctx.beginPath(); ctx.moveTo(tx - sh.vx * 12, ty - sh.vy * 12); ctx.lineTo(tx, ty); ctx.stroke();
+            if (sh.life > sh.max) shooters.splice(i, 1);
+          }
+          raf = requestAnimationFrame(draw);
+        };
+        raf = requestAnimationFrame(draw);
+        return () => { cancelAnimationFrame(raf); ro.disconnect(); };
+      }, []);
+      return <canvas ref={ref} className="absolute inset-0 w-full h-full" />;
+    }
+
+    /* ============ SL Logo ============ */
+    function SLMark({ size = 100, glow = true }) {
+      const id = useMemo(() => "g" + Math.random().toString(36).slice(2, 7), []);
+      return (
+        <svg width={size} height={size} viewBox="0 0 120 120" style={{ filter: glow ? "drop-shadow(0 0 18px rgba(217,70,239,0.55))" : "none" }}>
+          <defs>
+            <linearGradient id={`${id}-grad`} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d946ef" /><stop offset="50%" stopColor="#a855f7" /><stop offset="100%" stopColor="#22d3ee" />
+            </linearGradient>
+            <radialGradient id={`${id}-core`}>
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="60%" stopColor="#f0abfc" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+          <circle cx="60" cy="60" r="56" fill="none" stroke={`url(#${id}-grad)`} strokeWidth="1.5" opacity="0.6" />
+          <ellipse cx="60" cy="60" rx="50" ry="18" fill="none" stroke={`url(#${id}-grad)`} strokeWidth="1.2" transform="rotate(-25 60 60)" opacity="0.55" />
+          <g fill={`url(#${id}-grad)`}>
+            {Array.from({ length: 7 }).map((_, i) => {
+              const angle = (i * 360) / 7 - 90;
+              const len = i === 3 ? 38 : 30 + Math.abs(3 - i) * 1.8;
+              const w = i === 3 ? 4.2 : 3.2;
+              return <ellipse key={i} cx="60" cy={60 - len / 2 - 8} rx={w} ry={len / 2} transform={`rotate(${angle} 60 60)`} />;
+            })}
+          </g>
+          <circle cx="60" cy="60" r="14" fill={`url(#${id}-core)`} />
+          <circle cx="60" cy="60" r="3.5" fill="#ffffff" />
+          <circle cx="22" cy="32" r="1.2" fill="#ffffff" opacity="0.9" />
+          <circle cx="98" cy="28" r="1.6" fill="#ffffff" opacity="0.8" />
+          <circle cx="100" cy="92" r="1" fill="#ffffff" opacity="0.7" />
+          <circle cx="18" cy="88" r="1.4" fill="#ffffff" opacity="0.9" />
+        </svg>
+      );
+    }
+
+    /* ============ App root ============ */
+    function App() {
+      const [signedIn, setSignedIn] = useState(false);
+      const [phone, setPhone] = useState("");
+      const [tab, setTab] = useState("home");
+      const [stack, setStack] = useState([]);
+      const [authStep, setAuthStep] = useState(null);
+      const [referralPrompt, setReferralPrompt] = useState(null);
+      const [referralUnlocked, setReferralUnlocked] = useState(false);
+      const [cart, setCart] = useState([]);
+      const [orderConfirmed, setOrderConfirmed] = useState(null);
+      const [adminMode, setAdminMode] = useState(false);
+      const [showPinModal, setShowPinModal] = useState(false);
+      const [referralCode, setReferralCode] = useState("COSMIC26");
+      const [rotationPeriod, setRotationPeriod] = useState("weekly");
+      const [lastRotated, setLastRotated] = useState(new Date());
+      const [codeHistory, setCodeHistory] = useState([
+        { code: "COSMIC26", startedAt: new Date() },
+        { code: "GALAXY50", startedAt: new Date(Date.now() - 7 * 86400000) },
+        { code: "STARDUST", startedAt: new Date(Date.now() - 14 * 86400000) },
+      ]);
+      const cartCount = cart.reduce((s, i) => s + i.qty, 0);
+
+      const onTapItem = (item) => {
+        if (!signedIn) { setAuthStep("signinPrompt"); return; }
+        if (!referralUnlocked) { setReferralPrompt(item); return; }
+        setStack([{ kind: "item", item }]);
+      };
+      const submitReferral = (entered) => {
+        if (entered.trim().toUpperCase() === referralCode.toUpperCase()) {
+          setReferralUnlocked(true);
+          const item = referralPrompt; setReferralPrompt(null);
+          setStack([{ kind: "item", item }]); return true;
+        }
+        return false;
+      };
+      const addToCart = (entry) => { setCart((c) => [...c, entry]); setStack([]); };
+      const placeOrder = () => {
+        const id = "SL-" + Math.floor(2900 + Math.random() * 100);
+        setOrderConfirmed({ id, items: cart, total: cart.reduce((s, i) => s + i.price * i.qty, 0) });
+        setCart([]); setStack([{ kind: "orderConfirmed" }]);
+      };
+      const signOut = () => { setSignedIn(false); setPhone(""); setReferralUnlocked(false); setCart([]); setStack([]); setTab("home"); };
+      const rotateNow = () => {
+        const newCode = generateCode();
+        setCodeHistory((h) => [{ code: newCode, startedAt: new Date() }, ...h]);
+        setReferralCode(newCode); setLastRotated(new Date());
+      };
+
+      if (adminMode) {
+        return <AdminConsole onExit={() => setAdminMode(false)} referralCode={referralCode}
+          setReferralCode={(c) => { setReferralCode(c); setCodeHistory((h) => [{ code: c, startedAt: new Date() }, ...h]); setLastRotated(new Date()); }}
+          rotationPeriod={rotationPeriod} setRotationPeriod={setRotationPeriod}
+          lastRotated={lastRotated} codeHistory={codeHistory} rotateNow={rotateNow} />;
+      }
+
+      return (
+        <div style={{ background: "#000", width: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Frame>
+            <GalaxyBackground />
+            <div style={{ position:"relative", zIndex:10, display:"flex", flexDirection:"column", height:"100%", overflow:"hidden", minHeight:0 }}>
+              <StatusBar />
+              {stack.length > 0 ? (
+                <StackTop stack={stack} setStack={setStack} cart={cart} setCart={setCart}
+                  onAdd={addToCart} placeOrder={placeOrder} orderConfirmed={orderConfirmed}
+                  goHome={() => { setStack([]); setTab("home"); }} />
+              ) : (
+                <>
+                  {tab === "home" && <MenuScreen items={MENU} onTapItem={onTapItem}
+                    onCart={() => signedIn ? setStack([{ kind: "cart" }]) : setAuthStep("signinPrompt")} cartCount={cartCount} />}
+                  {tab === "orders" && <OrdersScreen signedIn={signedIn} onSignIn={() => setAuthStep("signinPrompt")} />}
+                  {tab === "account" && <AccountScreen signedIn={signedIn} phone={phone}
+                    onSignIn={() => setAuthStep("signinPrompt")} onSignOut={signOut} onAdmin={() => setShowPinModal(true)} />}
+                </>
+              )}
+              {stack.length === 0 && <TabBar tab={tab} setTab={setTab} />}
+            </div>
+            {authStep === "signinPrompt" && <SignInRequiredModal onSignIn={() => setAuthStep("phone")} onCancel={() => setAuthStep(null)} />}
+            {authStep === "phone" && <PhoneEntryScreen onBack={() => setAuthStep(null)} onSubmit={(p) => { setPhone(p); setAuthStep("verify"); }} />}
+            {authStep === "verify" && <VerifyScreen phone={phone} onBack={() => setAuthStep("phone")} onSuccess={() => { setSignedIn(true); setAuthStep(null); }} />}
+            {referralPrompt && <ReferralModal item={referralPrompt} onCancel={() => setReferralPrompt(null)} onSubmit={submitReferral} />}
+            {showPinModal && <AdminPinModal onCancel={() => setShowPinModal(false)} onSuccess={() => { setShowPinModal(false); setAdminMode(true); }} />}
+          </Frame>
+        </div>
+      );
+    }
+
+    function Frame({ children }) {
+      const isMobile = window.innerWidth <= 430;
+      return (
+        <div style={{
+          position: "relative",
+          width: isMobile ? "100vw" : "420px",
+          height: "100dvh",
+          maxHeight: isMobile ? "100dvh" : "880px",
+          borderRadius: isMobile ? 0 : 32,
+          background: "#000",
+          boxShadow: "0 0 60px rgba(168,85,247,0.3), 0 30px 80px rgba(0,0,0,0.7)",
+          border: `1px solid ${C.glassBorder}`,
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          flexShrink: 0,
+        }}>{children}</div>
+      );
+    }
+
+    function StatusBar() {
+      return (
+        <div className="flex justify-between items-center px-6 pt-3 pb-1 text-white text-xs font-medium relative z-10">
+          <span>1:23</span>
+          <span style={{ color: C.magenta, letterSpacing: "0.15em" }} className="font-bold">SL</span>
+          <span>99% \uD83D\uDD0B</span>
+        </div>
+      );
+    }
+
+    function MenuScreen({ items, onTapItem, onCart, cartCount }) {
+      return (
+        <div style={{ flex:"1 1 0", minHeight:0, display:"flex", flexDirection:"column" }}>
+          <Header title={<SLWordmarkTitle />} right={
+            <button onClick={onCart} className="relative p-2">
+              <ShoppingCart size={22} color="white" strokeWidth={2} />
+              {cartCount > 0 && <span className="absolute -top-0.5 -right-0.5 text-[10px] font-bold rounded-full px-1.5 py-0.5 text-white" style={{ background: C.magenta }}>{cartCount}</span>}
+            </button>
+          } />
+          <div className="sl-scrollable" style={{ flex:"1 1 0", minHeight:0, padding:"0 16px 24px", display:"flex", flexDirection:"column", gap:12 }}>
+            <div className="text-center mb-2">
+              <div className="text-white/50 text-xs uppercase tracking-widest">Fuel from</div>
+              <div className="text-white font-black text-xl mt-0.5" style={{ letterSpacing: "0.05em", background: COSMIC_GRADIENT, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>ANOTHER UNIVERSE</div>
+            </div>
+            {items.map((it) => (
+              <button key={it.id} onClick={() => onTapItem(it)}
+                className="w-full p-3 flex items-center gap-3 rounded-2xl active:scale-[0.98] transition text-left"
+                style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(12px)" }}>
+                <div className="w-20 h-20 rounded-xl flex items-center justify-center text-4xl flex-shrink-0 relative overflow-hidden"
+                  style={{ background: `linear-gradient(135deg, ${C.nebula}, ${C.deep})`, border: `1px solid ${C.glassBorder}` }}>
+                  <div className="absolute inset-0 opacity-50" style={{ background: "radial-gradient(circle at 30% 30%, rgba(217,70,239,0.5), transparent 60%)" }} />
+                  <span className="relative z-10">{it.emoji}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-bold text-base text-white truncate">{it.name}</div>
+                  <div className="text-[11px] text-white/50 mt-0.5 uppercase tracking-wider">{it.subtitle}</div>
+                  <div className="text-sm font-semibold mt-1" style={{ color: C.magenta }}>{it.priceRange}</div>
+                </div>
+                <ChevronRight size={20} color="rgba(255,255,255,0.4)" />
+              </button>
+            ))}
+            <div className="pt-2 pb-4 text-center text-white/40 text-xs">Delivery across Mississauga & GTA</div>
+          </div>
+        </div>
+      );
+    }
+
+    function SLWordmarkTitle() {
+      return <div className="font-black text-2xl" style={{ letterSpacing: "0.2em", background: COSMIC_GRADIENT, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>SL</div>;
+    }
+
+    function Header({ title, left, right }) {
+      return (
+        <div className="flex items-center justify-between px-4 py-3 relative">
+          <div className="w-10">{left}</div>
+          <div>{title}</div>
+          <div className="w-10 flex justify-end">{right}</div>
+        </div>
+      );
+    }
+
+    function TabBar({ tab, setTab }) {
+      const Tab = ({ id, icon: Icon, label }) => {
+        const active = tab === id;
+        return (
+          <button onClick={() => setTab(id)} className="flex-1 flex flex-col items-center justify-center py-2 gap-0.5">
+            <Icon size={22} color={active ? C.magenta : "rgba(255,255,255,0.5)"} strokeWidth={active ? 2.4 : 2} />
+            <span className="text-[11px] font-medium" style={{ color: active ? C.magenta : "rgba(255,255,255,0.5)" }}>{label}</span>
+          </button>
+        );
+      };
+      return (
+        <div className="flex" style={{ background: "rgba(5, 2, 26, 0.7)", borderTop: `1px solid ${C.glassBorder}`, backdropFilter: "blur(20px)", paddingBottom: "env(safe-area-inset-bottom)" }}>
+          <Tab id="home" icon={Home} label="Home" />
+          <Tab id="orders" icon={Receipt} label="Orders" />
+          <Tab id="account" icon={User} label="Account" />
+        </div>
+      );
+    }
+
+    function SignInRequiredModal({ onSignIn, onCancel }) {
+      return (
+        <Overlay>
+          <div className="px-6 pt-5 pb-4 mx-6 w-full max-w-xs rounded-2xl" style={{ background: C.glassBg, border: `1px solid ${C.glassHi}`, backdropFilter: "blur(20px)" }}>
+            <div className="text-lg font-bold text-white">Login Required</div>
+            <div className="text-sm text-white/60 mt-1.5">Please sign in to continue.</div>
+            <div className="flex justify-end items-center gap-2 mt-5">
+              <button onClick={onCancel} className="px-4 py-2 text-white/60 font-medium">Cancel</button>
+              <button onClick={onSignIn} className="px-5 py-2.5 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Sign In</button>
+            </div>
+          </div>
+        </Overlay>
+      );
+    }
+    function Overlay({ children }) {
+      return <div className="absolute inset-0 z-40 flex items-center justify-center" style={{ background: "rgba(5,2,26,0.7)", backdropFilter: "blur(8px)" }}>{children}</div>;
+    }
+
+    function PhoneEntryScreen({ onBack, onSubmit }) {
+      const [val, setVal] = useState("");
+      const formatted = formatPhone(val);
+      const valid = val.replace(/\D/g, "").length === 10;
+      return (
+        <div className="absolute inset-0 z-40 flex flex-col">
+          <GalaxyBackground />
+          <div className="relative z-10 flex flex-col h-full">
+            <StatusBar />
+            <div className="px-4 pt-2"><button onClick={onBack} className="text-white p-2 -ml-2"><ArrowLeft size={22} /></button></div>
+            <div className="flex-1 flex flex-col items-center px-6 pt-4">
+              <SLMark size={96} />
+              <div className="text-white text-2xl font-black mt-6" style={{ letterSpacing: "0.05em" }}>Welcome</div>
+              <div className="text-white/60 text-sm mt-2">Enter your phone number to get started</div>
+              <div className="w-full mt-10 phone-row">
+                <div className="phone-flag-btn" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }}>
+                  <span className="ca-flag">🇨🇦</span><span style={{ fontSize: 15 }}>+1</span>
+                </div>
+                <input inputMode="numeric" placeholder="(555) 555-5555" value={formatted}
+                  onChange={(e) => setVal(e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  className="phone-input placeholder-white/40"
+                  style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, fontSize: 15 }} />
+              </div>
+              <button disabled={!valid} onClick={() => onSubmit(val)}
+                className="w-full mt-8 py-4 rounded-xl font-bold text-base text-white disabled:opacity-40"
+                style={{ background: COSMIC_GRADIENT }}>Send Verification Code</button>
+              <div className="text-white/50 text-xs text-center mt-6 leading-relaxed px-4">
+                By continuing, you agree to our{" "}
+                <a href={TERMS_URL} target="_blank" rel="noopener noreferrer" className="underline" style={{ color: C.magenta }}>Terms of Service and Privacy Policy</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function formatPhone(raw) {
+      const d = raw.replace(/\D/g, "").slice(0, 10);
+      if (d.length < 4) return d;
+      if (d.length < 7) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+      return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
+    }
+
+    function VerifyScreen({ phone, onBack, onSuccess }) {
+      const [code, setCode] = useState(["", "", "", "", "", ""]);
+      const [error, setError] = useState("");
+      const [resendIn, setResendIn] = useState(30);
+      useEffect(() => { if (resendIn <= 0) return; const t = setTimeout(() => setResendIn((r) => r - 1), 1000); return () => clearTimeout(t); }, [resendIn]);
+      const setDigit = (i, v) => {
+        const d = v.replace(/\D/g, "").slice(0, 1);
+        const next = [...code]; next[i] = d; setCode(next);
+        if (d && i < 5) document.getElementById(`otp-${i + 1}`)?.focus();
+      };
+      const submit = () => { if (code.join("").length === 6) onSuccess(); else setError("Enter all 6 digits"); };
+      const filled = code.every((d) => d);
+      return (
+        <div className="absolute inset-0 z-40 flex flex-col">
+          <GalaxyBackground />
+          <div className="relative z-10 flex flex-col h-full">
+            <StatusBar />
+            <div className="px-4 pt-2"><button onClick={onBack} className="text-white p-2 -ml-2"><ArrowLeft size={22} /></button></div>
+            <div className="flex-1 flex flex-col items-center px-6 pt-6">
+              <SLMark size={80} />
+              <div className="text-white text-2xl font-black mt-6">Enter Code</div>
+              <div className="text-white/60 text-sm mt-2 text-center">
+                Sent to <span className="text-white font-medium">+1 {formatPhone(phone)}</span>
+              </div>
+              <div className="flex gap-2 mt-10">
+                {code.map((d, i) => (
+                  <input key={i} id={`otp-${i}`} inputMode="numeric" maxLength={1} value={d}
+                    onChange={(e) => setDigit(i, e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Backspace" && !code[i] && i > 0) document.getElementById(`otp-${i - 1}`)?.focus(); }}
+                    className="w-11 h-14 text-center text-2xl font-bold rounded-xl outline-none text-white"
+                    style={{ background: C.glassBg, border: error ? `2px solid ${C.magenta}` : `2px solid ${C.glassBorder}` }} />
+                ))}
+              </div>
+              {error && <div className="text-pink-300 text-xs mt-3">{error}</div>}
+              <button disabled={!filled} onClick={submit} className="w-full mt-8 py-4 rounded-xl font-bold text-white disabled:opacity-40" style={{ background: COSMIC_GRADIENT }}>Verify</button>
+              <button disabled={resendIn > 0} onClick={() => setResendIn(30)} className="text-white/70 text-sm mt-5 disabled:opacity-50">{resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}</button>
+              <div className="text-white/40 text-[11px] text-center mt-4 px-6">Demo: any 6 digits work. Production uses Twilio Verify SMS.</div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function ReferralModal({ item, onCancel, onSubmit }) {
+      const [val, setVal] = useState("");
+      const [error, setError] = useState(false);
+      const submit = () => { if (!onSubmit(val)) { setError(true); setTimeout(() => setError(false), 1500); } };
+      return (
+        <Overlay>
+          <div className="px-6 pt-5 pb-5 mx-6 w-full max-w-xs rounded-2xl" style={{ background: C.glassBg, border: `1px solid ${C.glassHi}`, backdropFilter: "blur(20px)" }}>
+            <div className="flex items-center gap-2">
+              <Sparkles size={20} color={C.magenta} fill={C.magenta} />
+              <div className="text-lg font-bold text-white">Referral Code</div>
+            </div>
+            <div className="text-sm text-white/60 mt-1.5">Enter your referral code to view {item.name}.</div>
+            <input autoFocus value={val} onChange={(e) => setVal(e.target.value.toUpperCase())} placeholder="e.g. COSMIC26"
+              className="w-full mt-4 px-4 py-3 rounded-xl outline-none font-mono font-bold tracking-wide text-white placeholder-white/30"
+              style={{ background: "rgba(0,0,0,0.4)", border: error ? `2px solid ${C.magenta}` : `2px solid ${C.glassBorder}` }} />
+            {error && <div className="text-pink-300 text-xs mt-2">Invalid or expired code</div>}
+            <div className="flex justify-end items-center gap-2 mt-5">
+              <button onClick={onCancel} className="px-4 py-2 text-white/60 font-medium">Cancel</button>
+              <button onClick={submit} className="px-5 py-2.5 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Continue</button>
+            </div>
+          </div>
+        </Overlay>
+      );
+    }
+
+    function StackTop({ stack, setStack, cart, setCart, onAdd, placeOrder, orderConfirmed, goHome }) {
+      const top = stack[stack.length - 1];
+      const pop = () => setStack(stack.slice(0, -1));
+      if (top.kind === "item") return <ItemDetail item={top.item} onBack={pop} onAdd={onAdd} />;
+      if (top.kind === "cart") return <CartScreen cart={cart} setCart={setCart} onBack={pop} onCheckout={() => setStack([...stack, { kind: "checkout" }])} />;
+      if (top.kind === "checkout") return <CheckoutScreen cart={cart} onBack={pop} onPlace={placeOrder} />;
+      if (top.kind === "orderConfirmed") return <OrderConfirmedScreen order={orderConfirmed} onDone={goHome} />;
+      return null;
+    }
+
+    function ItemDetail({ item, onBack, onAdd }) {
+      const [size, setSize] = useState(item.sizes[0]);
+      const [flavor, setFlavor] = useState(item.flavors ? item.flavors[0] : null);
+      const [qty, setQty] = useState(1);
+      return (
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center px-4 py-3">
+            <button onClick={onBack} className="text-white p-1"><ArrowLeft size={22} /></button>
+            <div className="text-white font-bold text-base ml-2">{item.name}</div>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="h-56 mx-4 rounded-3xl flex items-center justify-center text-8xl relative overflow-hidden"
+              style={{ background: `linear-gradient(135deg, ${C.nebula} 0%, ${C.deep} 100%)`, border: `1px solid ${C.glassBorder}` }}>
+              <div className="absolute inset-0" style={{ background: "radial-gradient(circle at 50% 30%, rgba(217,70,239,0.4), transparent 70%)" }} />
+              <span className="relative z-10">{item.emoji}</span>
+            </div>
+            <div className="p-5">
+              <div className="text-xs uppercase tracking-widest font-bold" style={{ color: C.magenta }}>{item.subtitle}</div>
+              <h1 className="text-2xl font-black text-white mt-1">{item.name}</h1>
+              <p className="text-white/60 text-sm mt-2 leading-relaxed">{item.description}</p>
+              <div className="mt-5">
+                <SectionTitle>Size</SectionTitle>
+                <div className="space-y-2 mt-2">
+                  {item.sizes.map((s) => (
+                    <button key={s.id} onClick={() => setSize(s)} className="w-full flex items-center justify-between p-3 rounded-xl"
+                      style={{ background: size.id === s.id ? "rgba(217,70,239,0.15)" : C.glassBg, border: `2px solid ${size.id === s.id ? C.magenta : C.glassBorder}` }}>
+                      <div className="text-left">
+                        <div className="font-bold text-white">{s.name}</div>
+                        <div className="text-xs text-white/50">{s.info}</div>
+                      </div>
+                      <div className="font-bold text-white">${s.price.toFixed(2)}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {item.flavors && item.flavors.length > 1 && (
+                <div className="mt-5">
+                  <SectionTitle>Flavor</SectionTitle>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {item.flavors.map((f) => (
+                      <button key={f} onClick={() => setFlavor(f)} className="px-3 py-2 rounded-full text-sm font-semibold"
+                        style={{ background: flavor === f ? COSMIC_GRADIENT : C.glassBg, color: "white", border: `1px solid ${flavor === f ? "transparent" : C.glassBorder}` }}>{f}</button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              <div className="mt-5">
+                <SectionTitle>Quantity</SectionTitle>
+                <div className="flex items-center gap-4 mt-2">
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }}><Minus size={18} color="white" /></button>
+                  <div className="text-xl font-bold w-8 text-center text-white">{qty}</div>
+                  <button onClick={() => setQty(qty + 1)} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }}><Plus size={18} color="white" /></button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="p-4" style={{ borderTop: `1px solid ${C.glassBorder}` }}>
+            <button onClick={() => onAdd({ id: `${item.id}-${size.id}-${flavor || ''}-${Date.now()}`, itemId: item.id, name: item.name, size: size.name, flavor, price: size.price, qty, emoji: item.emoji })}
+              className="w-full py-4 rounded-xl font-bold text-white flex items-center justify-center gap-3" style={{ background: COSMIC_GRADIENT }}>
+              <span>Add to Cart</span><span className="opacity-60">\u00B7</span><span>${(size.price * qty).toFixed(2)}</span>
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function SectionTitle({ children }) { return <div className="text-xs uppercase tracking-widest font-bold text-white/50">{children}</div>; }
+
+    function CartScreen({ cart, setCart, onBack, onCheckout }) {
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const delivery = subtotal > 0 ? 7.99 : 0;
+      const tax = subtotal * 0.13;
+      const total = subtotal + delivery + tax;
+      const remove = (id) => setCart(cart.filter((i) => i.id !== id));
+      const setQty = (id, qty) => setCart(cart.map((i) => i.id === id ? { ...i, qty: Math.max(1, qty) } : i));
+      return (
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center px-4 py-3">
+            <button onClick={onBack} className="text-white p-1"><ArrowLeft size={22} /></button>
+            <div className="text-white font-bold text-base ml-2">Your Cart</div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {cart.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-20 text-white/40">
+                <ShoppingCart size={48} /><div className="mt-4 font-medium">Your cart is empty</div>
+              </div>
+            )}
+            {cart.map((it) => (
+              <div key={it.id} className="flex gap-3 p-3 rounded-xl" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }}>
+                <div className="w-16 h-16 rounded-lg flex items-center justify-center text-3xl flex-shrink-0" style={{ background: `linear-gradient(135deg, ${C.nebula}, ${C.deep})` }}>{it.emoji}</div>
+                <div className="flex-1">
+                  <div className="font-bold text-white">{it.name}</div>
+                  <div className="text-xs text-white/50 mt-0.5">{it.size}{it.flavor ? ` \u00B7 ${it.flavor}` : ''}</div>
+                  <div className="flex items-center justify-between mt-2">
+                    <div className="font-bold text-white">${(it.price * it.qty).toFixed(2)}</div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setQty(it.id, it.qty - 1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}><Minus size={14} color="white" /></button>
+                      <span className="font-bold text-white">{it.qty}</span>
+                      <button onClick={() => setQty(it.id, it.qty + 1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.1)" }}><Plus size={14} color="white" /></button>
+                    </div>
+                  </div>
+                </div>
+                <button onClick={() => remove(it.id)} className="text-white/40"><XIcon size={16} /></button>
+              </div>
+            ))}
+          </div>
+          {cart.length > 0 && (
+            <div className="p-4 space-y-3" style={{ borderTop: `1px solid ${C.glassBorder}` }}>
+              <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
+              <Row label="Delivery (Mississauga/GTA)" value={`$${delivery.toFixed(2)}`} />
+              <Row label="HST (13%)" value={`$${tax.toFixed(2)}`} />
+              <div className="pt-3 flex justify-between font-bold text-lg text-white" style={{ borderTop: `1px solid ${C.glassBorder}` }}>
+                <span>Total</span><span>${total.toFixed(2)}</span>
+              </div>
+              <button onClick={onCheckout} className="w-full py-4 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Checkout</button>
+            </div>
+          )}
+        </div>
+      );
+    }
+    function Row({ label, value }) { return <div className="flex justify-between text-sm"><span className="text-white/50">{label}</span><span className="text-white font-medium">{value}</span></div>; }
+
+    function CheckoutScreen({ cart, onBack, onPlace }) {
+      const [address, setAddress] = useState("123 Main St, Mississauga, ON");
+      const [paying, setPaying] = useState(false);
+      const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+      const total = subtotal + 7.99 + subtotal * 0.13;
+      return (
+        <div className="flex-1 flex flex-col">
+          <div className="flex items-center px-4 py-3">
+            <button onClick={onBack} className="text-white p-1"><ArrowLeft size={22} /></button>
+            <div className="text-white font-bold text-base ml-2">Checkout</div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-5 space-y-5">
+            <div>
+              <SectionTitle>Delivery Address</SectionTitle>
+              <input value={address} onChange={(e) => setAddress(e.target.value)} className="w-full mt-2 px-4 py-3 rounded-xl outline-none text-white" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }} />
+              <div className="text-xs text-white/40 mt-1">Available: Mississauga, Brampton, Etobicoke, Oakville</div>
+            </div>
+            <div>
+              <SectionTitle>Payment</SectionTitle>
+              <div className="mt-2 p-4 rounded-xl" style={{ background: "rgba(217,70,239,0.1)", border: `2px solid ${C.magenta}` }}>
+                <div className="font-bold text-white">\u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 \u2022\u2022\u2022\u2022 4242</div>
+                <div className="text-xs text-white/50 mt-0.5">Visa \u00B7 Expires 12/27</div>
+              </div>
+            </div>
+            <div>
+              <SectionTitle>Order Summary</SectionTitle>
+              <div className="mt-2 space-y-2">
+                {cart.map((i) => (
+                  <div key={i.id} className="flex justify-between text-sm">
+                    <span className="text-white/80">{i.qty}\u00D7 {i.name} ({i.size})</span>
+                    <span className="text-white font-medium">${(i.price * i.qty).toFixed(2)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <div className="p-4" style={{ borderTop: `1px solid ${C.glassBorder}` }}>
+            <button disabled={paying} onClick={() => { setPaying(true); setTimeout(onPlace, 800); }}
+              className="w-full py-4 rounded-xl font-bold text-white disabled:opacity-60" style={{ background: COSMIC_GRADIENT }}>
+              {paying ? "Processing..." : `Place Order \u00B7 $${total.toFixed(2)}`}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    function OrderConfirmedScreen({ order, onDone }) {
+      return (
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <div className="w-24 h-24 rounded-full flex items-center justify-center" style={{ background: COSMIC_GRADIENT, boxShadow: "0 0 40px rgba(217,70,239,0.5)" }}>
+            <Check size={44} color="white" strokeWidth={3} />
+          </div>
+          <div className="text-2xl font-black text-white mt-6">Order Placed!</div>
+          <div className="text-white/60 text-sm mt-2 text-center">
+            Order <span className="font-mono font-bold text-white">{order?.id}</span><br />Estimated delivery: 35\u201350 min
+          </div>
+          <div className="mt-6 px-5 py-3 rounded-xl text-center" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}` }}>
+            <div className="text-xs text-white/50">Total paid</div>
+            <div className="text-2xl font-black text-white">${(order?.total + 7.99 + order?.total * 0.13).toFixed(2)}</div>
+          </div>
+          <button onClick={onDone} className="w-full mt-8 py-4 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Back to Menu</button>
+        </div>
+      );
+    }
+
+    function OrdersScreen({ signedIn, onSignIn }) {
+      if (!signedIn) {
+        return (
+          <div className="flex-1 flex flex-col">
+            <Header title={<SLWordmarkTitle />} />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <Receipt size={48} color="rgba(255,255,255,0.6)" />
+              <div className="text-white text-lg font-bold mt-4">No orders yet</div>
+              <div className="text-white/60 text-sm mt-2">Sign in to view your order history</div>
+              <button onClick={onSignIn} className="mt-6 px-6 py-3 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Sign In</button>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="flex-1 flex flex-col">
+          <Header title={<SLWordmarkTitle />} />
+          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {MOCK_ORDERS.map((o) => (
+              <div key={o.id} className="rounded-2xl p-4" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(12px)" }}>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <div className="font-bold text-white">{o.id}</div>
+                    <div className="text-xs text-white/50 mt-0.5">{o.date}</div>
+                  </div>
+                  <div className="px-2.5 py-1 rounded-full text-[11px] font-bold" style={{ background: "rgba(34,211,238,0.2)", color: C.cyan }}>{o.status}</div>
+                </div>
+                <div className="mt-3 space-y-1">
+                  {o.items.map((it, idx) => <div key={idx} className="text-sm text-white/70">{it.name}</div>)}
+                </div>
+                <div className="mt-3 pt-3 flex justify-between" style={{ borderTop: `1px solid ${C.glassBorder}` }}>
+                  <span className="text-sm text-white/50">Total</span>
+                  <span className="font-bold text-white">${o.total.toFixed(2)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    function AccountScreen({ signedIn, phone, onSignIn, onSignOut, onAdmin }) {
+      if (!signedIn) {
+        return (
+          <div className="flex-1 flex flex-col">
+            <Header title={<SLWordmarkTitle />} />
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <button onClick={onAdmin} style={{ background:"none", border:"none", padding:0, cursor:"pointer" }}>
+                <SLMark size={80} />
+              </button>
+              <div className="text-white text-lg font-bold mt-6">Not signed in</div>
+              <div style={{ color:"rgba(255,255,255,0.3)", fontSize:11, marginTop:4 }}>Tap logo for admin access</div>
+              <button onClick={onSignIn} className="mt-6 px-6 py-3 rounded-xl font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Sign In</button>
+            </div>
+          </div>
+        );
+      }
+      return (
+        <div className="flex-1 flex flex-col">
+          <Header title={<SLWordmarkTitle />} />
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="rounded-2xl p-5 flex items-center gap-4" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(12px)" }}>
+              <div className="w-14 h-14 rounded-full flex items-center justify-center" style={{ background: COSMIC_GRADIENT }}>
+                <User size={26} color="white" />
+              </div>
+              <div>
+                <div className="font-bold text-white">Welcome back</div>
+                <div className="text-sm text-white/60">+1 {formatPhone(phone)}</div>
+              </div>
+            </div>
+            <div className="rounded-2xl overflow-hidden" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(12px)" }}>
+              <Row2 icon={Phone} label="Phone Number" value={`+1 ${formatPhone(phone)}`} />
+              <Divider />
+              <Row2 icon={FileText} label="Terms & Privacy" href={TERMS_URL} />
+              <Divider />
+              <Row2 icon={Settings} label="Admin Console" onClick={onAdmin} accent />
+              <Divider />
+              <Row2 icon={LogOut} label="Sign Out" onClick={onSignOut} danger />
+            </div>
+            <div className="text-center text-white/40 text-xs pt-2">SL \u00B7 v1.0.0 \u00B7 Mississauga, ON</div>
+          </div>
+        </div>
+      );
+    }
+    function Row2({ icon: Icon, label, value, onClick, href, danger, accent }) {
+      const T = href ? "a" : "button";
+      return (
+        <T href={href} target={href ? "_blank" : undefined} rel={href ? "noopener noreferrer" : undefined} onClick={onClick} className="w-full flex items-center px-4 py-3.5 text-left">
+          <Icon size={20} color={danger ? "#f87171" : accent ? C.magenta : "white"} />
+          <span className="ml-3 font-medium flex-1" style={{ color: danger ? "#f87171" : "white" }}>{label}</span>
+          {value && <span className="text-sm text-white/50 mr-2">{value}</span>}
+          {!danger && <ChevronRight size={18} color="rgba(255,255,255,0.4)" />}
+        </T>
+      );
+    }
+    function Divider() { return <div className="h-px mx-4" style={{ background: C.glassBorder }} />; }
+
+
+    /* ============ Admin PIN Modal ============ */
+    const ADMIN_PIN = "1234"; // Change this to your secret PIN
+    function AdminPinModal({ onCancel, onSuccess }) {
+      const [pin, setPin] = useState("");
+      const [error, setError] = useState(false);
+      const [shake, setShake] = useState(false);
+      const digits = ["1","2","3","4","5","6","7","8","9","","0","⌫"];
+      const addDigit = (d) => {
+        if (d === "⌫") { setPin(p => p.slice(0,-1)); setError(false); return; }
+        if (!d) return;
+        if (pin.length >= 4) return;
+        const next = pin + d;
+        setPin(next);
+        if (next.length === 4) {
+          if (next === ADMIN_PIN) { setTimeout(onSuccess, 200); }
+          else { setError(true); setShake(true); setTimeout(() => { setPin(""); setShake(false); }, 600); }
+        }
+      };
+      return (
+        <Overlay>
+          <div style={{ background:"rgba(13,6,40,0.98)", border:`1px solid rgba(217,70,239,0.5)`, borderRadius:24, padding:"32px 28px", width:"min(90vw,320px)", backdropFilter:"blur(30px)" }}>
+            <div style={{ textAlign:"center", marginBottom:24 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"rgba(255,255,255,0.5)", letterSpacing:"0.15em", textTransform:"uppercase" }}>Admin Access</div>
+              <div style={{ fontSize:22, fontWeight:900, color:"white", marginTop:6 }}>Enter PIN</div>
+            </div>
+            <div style={{ display:"flex", justifyContent:"center", gap:16, marginBottom:28, transform: shake ? "translateX(0)" : "", animation: shake ? "shake 0.4s ease" : "" }}>
+              {[0,1,2,3].map(i => (
+                <div key={i} className={"pin-dot" + (pin.length > i ? " filled" : "")} />
+              ))}
+            </div>
+            {error && <div style={{ color:"#f87171", fontSize:12, textAlign:"center", marginBottom:12, marginTop:-16 }}>Wrong PIN. Try again.</div>}
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10 }}>
+              {digits.map((d,i) => (
+                <button key={i} onClick={() => addDigit(d)}
+                  style={{ padding:"16px 0", borderRadius:14, fontSize: d === "⌫" ? 18 : 22, fontWeight:700,
+                    color: d === "⌫" ? "rgba(255,255,255,0.6)" : "white",
+                    background: d ? "rgba(255,255,255,0.07)" : "transparent",
+                    border: d ? "1px solid rgba(168,85,247,0.2)" : "none",
+                    cursor: d ? "pointer" : "default",
+                    transition:"all 0.1s" }}>
+                  {d}
+                </button>
+              ))}
+            </div>
+            <button onClick={onCancel} style={{ width:"100%", marginTop:16, padding:"12px 0", borderRadius:12, background:"transparent", border:"1px solid rgba(255,255,255,0.1)", color:"rgba(255,255,255,0.5)", fontWeight:600, cursor:"pointer" }}>Cancel</button>
+            <div style={{ textAlign:"center", fontSize:11, color:"rgba(255,255,255,0.25)", marginTop:12 }}>Demo PIN: 1234</div>
+          </div>
+        </Overlay>
+      );
+    }
+
+    function AdminConsole({ onExit, referralCode, setReferralCode, rotationPeriod, setRotationPeriod, lastRotated, codeHistory, rotateNow }) {
+      const [edit, setEdit] = useState(false);
+      const [draft, setDraft] = useState(referralCode);
+      const [reveal, setReveal] = useState(true);
+      const [copied, setCopied] = useState(false);
+      const nextRotation = useMemo(() => {
+        if (rotationPeriod === "manual") return null;
+        const days = rotationPeriod === "daily" ? 1 : 7;
+        return new Date(new Date(lastRotated).getTime() + days * 86400000);
+      }, [rotationPeriod, lastRotated]);
+      const copy = () => { navigator.clipboard?.writeText(referralCode); setCopied(true); setTimeout(() => setCopied(false), 1500); };
+
+      return (
+        <div className="min-h-screen w-full relative" style={{ background: "#000" }}>
+          <div className="fixed inset-0"><GalaxyBackground /></div>
+          <div className="relative z-10 max-w-3xl mx-auto p-6">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <SLMark size={44} />
+                <div>
+                  <div className="text-3xl font-black" style={{ letterSpacing: "0.2em", background: COSMIC_GRADIENT, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>SL</div>
+                  <div className="text-xs text-white/60">Admin \u00B7 Referral codes</div>
+                </div>
+              </div>
+              <button onClick={onExit} className="px-4 py-2 rounded-lg font-medium text-sm text-white" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(12px)" }}>\u2190 Back to App</button>
+            </div>
+            <Card>
+              <div className="flex items-start justify-between flex-wrap gap-4">
+                <div>
+                  <SubLabel>Current Referral Code</SubLabel>
+                  <div className="flex items-center gap-3 mt-2">
+                    {edit ? (
+                      <input autoFocus value={draft} onChange={(e) => setDraft(e.target.value.toUpperCase().replace(/\s/g, ""))}
+                        className="text-3xl font-bold font-mono tracking-wider px-3 py-1 rounded-lg outline-none text-white"
+                        style={{ background: "rgba(0,0,0,0.4)", border: `2px solid ${C.magenta}` }} />
+                    ) : (
+                      <div className="text-3xl font-black font-mono tracking-wider" style={{ background: COSMIC_GRADIENT, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                        {reveal ? referralCode : "\u2022".repeat(referralCode.length)}
+                      </div>
+                    )}
+                    {!edit && (
+                      <>
+                        <button onClick={() => setReveal(!reveal)} className="p-2 rounded-lg" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          {reveal ? <EyeOff size={18} color="white" /> : <Eye size={18} color="white" />}
+                        </button>
+                        <button onClick={copy} className="p-2 rounded-lg relative" style={{ background: "rgba(255,255,255,0.05)" }}>
+                          <Copy size={18} color="white" />
+                          {copied && <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-xs bg-black text-white px-2 py-0.5 rounded">Copied</span>}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  {edit ? (
+                    <>
+                      <button onClick={() => { setDraft(referralCode); setEdit(false); }} className="px-3 py-1.5 rounded-lg text-sm font-medium text-white/60">Cancel</button>
+                      <button onClick={() => { if (draft.length >= 4) { setReferralCode(draft); setEdit(false); } }} className="px-3 py-1.5 rounded-lg text-sm font-bold text-white" style={{ background: COSMIC_GRADIENT }}>Save</button>
+                    </>
+                  ) : (
+                    <button onClick={() => { setDraft(referralCode); setEdit(true); }} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white" style={{ background: "rgba(255,255,255,0.08)" }}>
+                      <Edit2 size={14} /> Edit
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="mt-4 flex items-center gap-2 text-xs text-white/50">
+                <Clock size={14} /> Last changed: {timeAgo(lastRotated)}
+              </div>
+            </Card>
+            <Card>
+              <SubLabel>Rotation Schedule</SubLabel>
+              <div className="grid grid-cols-3 gap-2 mt-3">
+                {[{ id: "daily", label: "Daily", desc: "Every 24h" }, { id: "weekly", label: "Weekly", desc: "Every 7 days" }, { id: "manual", label: "Manual", desc: "You decide" }].map((opt) => (
+                  <button key={opt.id} onClick={() => setRotationPeriod(opt.id)} className="p-3 rounded-xl text-left transition"
+                    style={{ border: `2px solid ${rotationPeriod === opt.id ? C.magenta : C.glassBorder}`, background: rotationPeriod === opt.id ? "rgba(217,70,239,0.15)" : "rgba(255,255,255,0.03)" }}>
+                    <div className="font-bold text-white">{opt.label}</div>
+                    <div className="text-xs text-white/50 mt-0.5">{opt.desc}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="mt-4 flex items-center justify-between p-3 rounded-lg" style={{ background: "rgba(255,255,255,0.04)" }}>
+                <div className="text-sm">
+                  <div className="text-white/50 text-xs">Next rotation</div>
+                  <div className="font-bold mt-0.5 text-white">
+                    {nextRotation ? nextRotation.toLocaleString("en-CA", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "Manual only"}
+                  </div>
+                </div>
+                <button onClick={rotateNow} className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm text-white" style={{ background: COSMIC_GRADIENT }}>
+                  <RefreshCw size={14} /> Rotate now
+                </button>
+              </div>
+            </Card>
+            <Card>
+              <SubLabel>Code History</SubLabel>
+              <div className="mt-3">
+                {codeHistory.slice(0, 6).map((h, i) => (
+                  <div key={i} className="flex items-center justify-between py-3" style={{ borderTop: i > 0 ? `1px solid ${C.glassBorder}` : "none" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="font-mono font-bold" style={{ color: i === 0 ? "white" : "rgba(255,255,255,0.4)" }}>{h.code}</div>
+                      {i === 0 && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: COSMIC_GRADIENT }}>ACTIVE</span>}
+                    </div>
+                    <div className="text-xs text-white/50">{timeAgo(h.startedAt)}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+            <Card>
+              <SubLabel>Supabase Production Setup</SubLabel>
+              <div className="mt-3 space-y-3">
+                <div style={{ background:"rgba(0,0,0,0.5)", borderRadius:10, padding:"12px 14px" }}>
+                  <div style={{ color:"rgba(168,85,247,0.9)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", marginBottom:6 }}>TABLE: referral_codes</div>
+                  <div style={{ fontFamily:"monospace", fontSize:12, color:"rgba(255,255,255,0.75)", lineHeight:1.7 }}>
+                    id · uuid · primary key<br/>
+                    current_code · text · not null<br/>
+                    rotation · text · default weekly<br/>
+                    last_rotated · timestamptz<br/>
+                    next_rotation · timestamptz<br/>
+                    history · jsonb · default []
+                  </div>
+                </div>
+                <div style={{ background:"rgba(0,0,0,0.5)", borderRadius:10, padding:"12px 14px" }}>
+                  <div style={{ color:"rgba(34,211,238,0.9)", fontSize:11, fontWeight:700, letterSpacing:"0.1em", marginBottom:6 }}>CRON JOB (pg_cron)</div>
+                  <div style={{ fontFamily:"monospace", fontSize:11, color:"rgba(255,255,255,0.65)", lineHeight:1.7 }}>
+                    {"-- Run daily at midnight ET"}<br/>
+                    {"SELECT cron.schedule("}<br/>
+                    {"  'rotate-referral',"}<br/>
+                    {"  '0 5 * * *',"}<br/>
+                    {"  $$CALL rotate_referral_code()$$"}<br/>
+                    {");"}
+                  </div>
+                </div>
+                <div style={{ fontSize:12, color:"rgba(255,255,255,0.4)", lineHeight:1.6 }}>
+                  Your developer pastes this into Supabase SQL Editor. The customer app calls <span style={{ fontFamily:"monospace", color:"rgba(168,85,247,0.8)" }}>GET /referral/current</span> on every launch. No code deployment needed to rotate codes.
+                </div>
+              </div>
+            </Card>
+            <div className="text-center text-xs text-white/40 mt-6 pb-6">Demo console · PIN: 1234 · Production backend = Supabase</div>
+          </div>
+        </div>
+      );
+    }
+    function Card({ children }) {
+      return <div className="rounded-2xl p-5 mb-4" style={{ background: C.glassBg, border: `1px solid ${C.glassBorder}`, backdropFilter: "blur(20px)" }}>{children}</div>;
+    }
+    function SubLabel({ children }) { return <div className="text-xs uppercase tracking-widest font-bold text-white/50">{children}</div>; }
+    function timeAgo(d) {
+      const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
+      if (s < 60) return `${s}s ago`;
+      const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+      const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+      return `${Math.floor(h / 24)}d ago`;
+    }
+    function generateCode() {
+      const w = ["COSMIC", "GALAXY", "STAR", "NEBULA", "ORBIT", "VOID", "ASTRAL", "LUNAR"];
+      return `${w[Math.floor(Math.random() * w.length)]}${Math.floor(10 + Math.random() * 90)}`;
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
