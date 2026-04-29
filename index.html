@@ -410,7 +410,6 @@
                   onChange={(e) => setVal(e.target.value.replace(/\D/g, "").slice(0, 10))}
                   style={{ flex: 1, minWidth: 0, background: C.glassBg, border: `1px solid ${C.glassBorder}`, borderRadius: 12, padding: "12px 16px", outline: "none", color: "white", fontSize: "16px" }} />
               </div>
-              </div>
               <button disabled={!valid} onClick={() => onSubmit(val)}
                 className="w-full mt-8 py-4 rounded-xl font-bold text-base text-white disabled:opacity-40"
                 style={{ background: COSMIC_GRADIENT }}>Send Verification Code</button>
